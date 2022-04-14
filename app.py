@@ -1,13 +1,13 @@
 
 from flask import Flask, render_template, url_for, request
 from csv import reader
-import os
 import io
 
 app = Flask(__name__)
 def getFromCsvFile(fname):
-    loopSets = []
-    loopSet = set()
+
+    temp1 = []
+    temp2 = set()
 
     s = io.StringIO(fname.stream.read().decode("UTF8"), newline=None)
     cRead = reader(s)
@@ -15,9 +15,9 @@ def getFromCsvFile(fname):
             cell = list(filter(None,cell))
             data = set(cell)
             for item in data:
-                loopSet.add(frozenset([item]))
-            loopSets.append(data)
-    return(loopSet, loopSets)
+                temp2.add(frozenset([item]))
+            temp1.append(data)
+    return(temp2, temp1)
         
     
 def createCell1(dataSet):
@@ -30,20 +30,20 @@ def createCell1(dataSet):
     Cell1.sort()
     return list(map(frozenset, Cell1))
 
-def aprioriGenerate(Ak, A):  # creates Ck
-    retriveList = []
-    lenAk = len(Ak)
-    for i in range(lenAk):
-        for j in range(i + 1, lenAk):
+def generate(Ak, A):  # creates Ck
+    tList = []
+    lk = len(Ak)
+    for i in range(lk):
+        for j in range(i + 1, lk):
             L1 = list(Ak[i])[:A - 2]
             L2 = list(Ak[j])[:A - 2]
             L1.sort()
             L2.sort()
             if L1 == L2:  # if first k-2 elements are equal
-                    retriveList.append(Ak[i] | Ak[j])  # set union
-    return retriveList
+                    tList.append(Ak[i] | Ak[j])  # set union
+    return tList
 
-def scanningD(D, Ck, minSupport):
+def sD1(D, Ck, minSupport):
     ssdCnt = {}
     for tid in D:
         for can in Ck:
@@ -66,59 +66,61 @@ def scanningD(D, Ck, minSupport):
         supportRecord[key] = support
     return (retList, supportRecord)
 
-def aprioriFromCsvFile(fname, minSup):
+def readFile(fname, minSup):
     (Cell1ItemSet, recordSetList) = getFromCsvFile(fname)
 
     # print(recordSetList)
 
-    (L1, supportData) = scanningD(recordSetList, Cell1ItemSet, minSup)
+    (L1, sD) = sD1(recordSetList, Cell1ItemSet, minSup)
     L = [L1]
     k = 2
     while len(L[k - 2]) > 0:
-        Ck = aprioriGenerate(L[k - 2], k)
-        (Lk, supK) = scanningD(recordSetList, Ck, minSup)  # scan DB to get Lk
-        supportData.update(supK)
+        Ck = generate(L[k - 2], k)
+        (Lk, supK) = sD1(recordSetList, Ck, minSup)  # scan DB to get Lk
+        sD.update(supK)
         L.append(Lk)
         k += 1
-    return (L, supportData)
-  
+    return (L, sD)
 
-
-
-@app.route('/')
-@app.route('/home')
-def home():
-    return render_template("index.html")
-
-@app.route('/result',methods=['POST', 'GET'])
-def result():
-    output = request.files['myfile']
-    f1, rules = aprioriFromCsvFile(output,20)
-    for temp in f1:
-        for i1 in f1[0]:
-            for i2 in f1[1]:
-                for i3 in f1[2]:
-                    for i4 in f1[3]:
+def sorted(list1):
+    for temp in list1:
+        for i1 in list1[0]:
+            for i2 in list1[1]:
+                for i3 in list1[2]:
+                    for i4 in list1[3]:
                         if i1.issubset(i2) \
                                 or i1.issubset(i3) \
                                 or i1.issubset(i4):
                             try:
-                                f1[0].remove(i1)
+                                list1[0].remove(i1)
                             except:
                                 {}
                         if i2.issubset(i3) \
                                 or i2.issubset(i4):
                             try:
-                                f1[1].remove(i2)
+                                list1[1].remove(i2)
                             except:
                                 {}
                         if i3.issubset(i4):
                             try:
-                                f1[2].remove(i3)
+                                list1[2].remove(i3)
                             except:
                                 {}
+    return list1
 
-    return render_template('index.html', temp = f1)
+
+
+@app.route('/')
+@app.route('/first')
+def home():
+    return render_template("first.html")
+
+@app.route('/output',methods=['POST', 'GET'])
+def result():
+    output = request.files['myfile']
+    f1, rules = readFile(output,20)
+    f1 = sorted(f1)
+    return render_template('first.html', temp = f1)
     
 
 
