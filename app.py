@@ -4,7 +4,7 @@ from csv import reader
 import io
 
 app = Flask(__name__)
-def getFromCsvFile(fname):
+def getData(fname):
 
     temp1 = []
     temp2 = set()
@@ -43,7 +43,7 @@ def generate(Ak, A):  # creates Ck
                     tList.append(Ak[i] | Ak[j])  # set union
     return tList
 
-def sD1(D, Ck, minSupport):
+def sD1(D, Ck, supp):
     ssdCnt = {}
     for tid in D:
         for can in Ck:
@@ -54,29 +54,29 @@ def sD1(D, Ck, minSupport):
                     ssdCnt[can] += 1
     numItems = float(len(D))
     retList = []
-    supportRecord = {}
+    sR = {}
     for key in ssdCnt:
         support = ssdCnt[key] / numItems * 1000
 
         # support = ssdCnt[key]
         # print(support)
 
-        if support >= minSupport:
+        if support >= supp:
             retList.insert(0, key)
-        supportRecord[key] = support
-    return (retList, supportRecord)
+        sR[key] = support
+    return (retList, sR)
 
 def readFile(fname, minSup):
-    (Cell1ItemSet, recordSetList) = getFromCsvFile(fname)
+    (temp1, tempList) = getData(fname)
 
     # print(recordSetList)
 
-    (L1, sD) = sD1(recordSetList, Cell1ItemSet, minSup)
+    (L1, sD) = sD1(tempList, temp1, minSup)
     L = [L1]
     k = 2
     while len(L[k - 2]) > 0:
         Ck = generate(L[k - 2], k)
-        (Lk, supK) = sD1(recordSetList, Ck, minSup)  # scan DB to get Lk
+        (Lk, supK) = sD1(tempList, Ck, minSup)  # scan DB to get Lk
         sD.update(supK)
         L.append(Lk)
         k += 1
