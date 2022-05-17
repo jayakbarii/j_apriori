@@ -117,8 +117,10 @@ def home():
 
 @app.route('/output',methods=['POST', 'GET'])
 def result():
+    minSupp = request.form['minSupp']
     output = request.files['myfile']
-    f1, rules = readFile(output,20)
+    print(minSupp)
+    f1, rules = readFile(output,int(minSupp))
     f1 = sorted(f1)
     return render_template('first.html', temp = f1)
     
