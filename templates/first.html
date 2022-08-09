@@ -14,7 +14,11 @@
 
       {% if temp %}
         <center>
-          <h3 class="let_space">{{temp}}!</h3>
+          <h3 class="let_space">Input file: {{temp[2]}}</h3>
+          <h3 class="let_space">Minimal support: {{temp[3]}}</h3>
+          <h3 class="let_space">{{temp[0]}}</h3>              
+          <h3 class="let_space">End - total items: {{temp[1]}}</h3>
+          <h3 class="let_space">Total running time: {{temp[4]}}</h3>
         </center> 
 
       {% endif %}
